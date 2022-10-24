@@ -1,0 +1,23 @@
+{
+
+  "description": "Hides unwanted/annoying comments from news portals",
+  "manifest_version": 2,
+  "name": "Hide Fu Comments",
+  "version": "0.1",
+  "homepage_url": "https://github.com/justasmalinauskas/fu-comments",
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+  "permissions": [
+
+    "https://*.delfi.lt/*",
+    "webRequest",
+    "webRequestBlocking"
+  ],
+
+  "background": {
+    "page": "background.html",
+    "persistent": true
+  }
+
+}
