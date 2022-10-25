@@ -12,12 +12,17 @@
 
     "https://*.delfi.lt/*",
     "webRequest",
-    "webRequestBlocking"
+    "webRequestBlocking",
+    "storage"
   ],
 
   "background": {
     "page": "background.html",
     "persistent": true
-  }
+  },
 
+  "options_ui": {
+    "page": "options/options.html",
+    "browser_style": true
+  }
 }

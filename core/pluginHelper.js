@@ -1,4 +1,4 @@
-import { bannedUsersStorage } from "../core/bannedUsersStorage.js";
+import {bannedUsersStorage} from "../core/bannedUsersStorage.js";
 
 
 export const PluginHelper = {
@@ -7,22 +7,21 @@ export const PluginHelper = {
         let filter = browser.webRequest.filterResponseData(details.requestId);
         const data = [];
         filter.ondata = (event) => {
-            data.push(decoder.decode(event.data, {stream: true}));
+            data.push(event.data);
         };
-
-        /*let responseData = new ArrayBuffer(0);
-        filter.ondata = event => {
-            let tmpBuffer = new Uint8Array(responseData.byteLength + event.data.byteLength);
-            tmpBuffer.set(new Uint8Array(responseData), 0);
-            tmpBuffer.set(new Uint8Array(event.data), responseData.byteLength);
-            responseData = tmpBuffer.buffer;
-        };*/
-
         filter.onstop = async () => {
+            if (data.length === 0) {
+                filter.disconnect();
+                return;
+            }
+            let str = "", decoder = new TextDecoder("utf-8");
+            let arrayLength = data.length;
+            for (let i = 0; i < arrayLength; i++) {
+                str += decoder.decode(data[i], {stream: true});
+            }
+            str += decoder.decode(); // end-of-queue
             try {
-                data.push(decoder.decode());
-                let responseData = data.join("");
-                code(filter, responseData);
+                await code(filter, str);
                 filter.close();
 
             } catch (e) {
@@ -31,54 +30,20 @@ export const PluginHelper = {
                 //filter.write(responseData);
             }
         };
-
         return {};
     },
 
     isBlocked(site, id) {
-        return bannedUsersStorage.get(site, id);
+        return bannedUsersStorage.get(site, id).then((item) => {
+            return (item !== null);
+        });
+
     },
-    JSONlistener(details, code) {
-        const decoder = new TextDecoder("utf-8");
-        let filter = browser.webRequest.filterResponseData(details.requestId);
-        const data = [];
-        filter.ondata = (event) => {
-            data.push(event.data);
-        };
+    isIterable(input) {
+        if (input === null || input === undefined) {
+            return false
+        }
 
-        /*let responseData = new ArrayBuffer(0);
-        filter.ondata = event => {
-            let tmpBuffer = new Uint8Array(responseData.byteLength + event.data.byteLength);
-            tmpBuffer.set(new Uint8Array(responseData), 0);
-            tmpBuffer.set(new Uint8Array(event.data), responseData.byteLength);
-            responseData = tmpBuffer.buffer;
-        };*/
-
-        filter.onstop = event => {
-            console.log([
-                event,
-                data.length
-            ]);
-            if(data.length === 0) {
-                filter.disconnect();
-                return ;
-            }
-            let str = "", decoder = new TextDecoder("utf-8");
-            let arrayLength = data.length;
-            for(let i = 0 ; i < arrayLength; i++) {
-                str += decoder.decode(data[i], {stream:true});
-            }
-            str += decoder.decode(); // end-of-queue
-            try {
-                const responseData = JSON.parse(str);
-                code(filter, responseData);
-                filter.close();
-
-            } catch (e) {
-                console.error(e);
-                filter.disconnect();
-                //filter.write(responseData);
-            }
-        };
+        return typeof input[Symbol.iterator] === 'function'
     }
 }

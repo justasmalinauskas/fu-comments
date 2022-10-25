@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="module" src="options.js"></script>
+    <link rel="stylesheet" href="bootstrap.min.css">
+
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Block trash commenters from your view</h1>
+    </header>
+    <main>
+        <div class="mb-3 row">
+            <button id="fetchSettings" class="btn btn-secondary">Fetch newest settings</button>
+        </div>
+        <div class="mb-3 row">
+            <pre id="currentSettings"></pre>
+        </div>
+        <div class="mb-3 row">
+            <label for="addSite" class="col-sm-2 col-form-label">Site ID</label>
+            <div class="col-sm-10">
+                <input id="addSite">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="addId" class="col-sm-2 col-form-label">Trash Commenter ID</label>
+            <div class="col-sm-10">
+                <input id="addId">
+            </div>
+
+
+        </div>
+        <div class="mb-3 row">
+            <button id="addSettings" class="btn btn-primary">Add new blocked</button>
+        </div>
+    </main>
+
+
+</div>
+
+</body>
+</html>

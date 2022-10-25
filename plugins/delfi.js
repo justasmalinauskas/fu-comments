@@ -1,35 +1,39 @@
 import { PluginHelper } from "../core/pluginHelper.js";
 export const delfiPlugin = {
     name: 'delfi-comments-api',
+    site: 'delfi',
     urls: [
         "https://api.delfi.lt/comment/v1/query/*"
     ],
     listener: function(details) {
-        const code = function (filter, responseData) {
+        const code = async function (filter, responseData) {
             let decoded = JSON.parse(responseData);
+            if(!PluginHelper.isIterable(decoded?.data?.getCommentsByConfig?.articleEntity?.comments)) {
+                let encoded = JSON.stringify(decoded);
+                filter.write(new TextEncoder().encode(encoded));
+                return;
+            }
             let comments = [...decoded?.data?.getCommentsByConfig?.articleEntity?.comments];
-
-            if (comments !== null && typeof comments.forEach !== "undefined") {
-                comments.forEach(function (comment, key) {
-                    if (comment.author !== null && PluginHelper.isBlocked('delfi', comment.author.id) === true) {
-                        delete decoded?.data?.getCommentsByConfig?.articleEntity?.comments[key];
-                        return;
+            for await (const [key, comment] of comments.entries()) {
+                if (comment.author !== null &&  await PluginHelper.isBlocked(delfiPlugin.site, comment.author.id) === true) {
+                    delete decoded?.data?.getCommentsByConfig?.articleEntity?.comments[key];
+                    continue;
+                }
+                let oldReplies = comment?.replies;
+                if(PluginHelper.isIterable(oldReplies)) {
+                    let replies = [];
+                    for (const reply of oldReplies) {
+                        if (reply.author !== null &&  await PluginHelper.isBlocked(delfiPlugin.site, reply.author.id) === false) {
+                            replies.push(reply)
+                        }
                     }
-                    let oldReplies = comment?.replies;
-                    if(oldReplies !== null && typeof oldReplies.forEach !== "undefined") {
-                        let replies = [];
-                        oldReplies.forEach(function (reply, replyKey) {
-                            if (reply.author !== null && PluginHelper.isBlocked('delfi', reply.author.id) === false) {
-                                replies.push(reply)
-                            }
-                        }, this);
-                        decoded.data.getCommentsByConfig.articleEntity.comments[key].replies = replies;
-
-                    }
-                }, this);
-                decoded.data.getCommentsByConfig.articleEntity.comments = decoded?.data?.getCommentsByConfig?.articleEntity?.comments.filter(item => item);
+                    decoded.data.getCommentsByConfig.articleEntity.comments[key].replies = replies;
+                }
 
             }
+
+            decoded.data.getCommentsByConfig.articleEntity.comments = decoded?.data?.getCommentsByConfig?.articleEntity?.comments.filter(item => item);
+
             let encoded = JSON.stringify(decoded);
             filter.write(new TextEncoder().encode(encoded));
         }
